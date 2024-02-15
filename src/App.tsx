@@ -1,101 +1,88 @@
-import { FormEvent, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { remult } from "remult"
-import { Task } from "./shared/Task"
-import { TasksController } from "./shared/TasksController"
+import { User } from "./shared/User"
 
-const taskRepo = remult.repo(Task)
+const userRepo = remult.repo(User)
 
 export default function App() {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [newTaskTitle, setNewTaskTitle] = useState("")
+  const [users, setUsers] = useState<User[]>([])
 
-  const addTask = async (e: FormEvent) => {
-    e.preventDefault()
+  useEffect(() => {
+    userRepo.find().then(setUsers)
+  }, [])
+
+  function create() {
+    setUsers([
+      ...users,
+      {
+        id: "new_" + users.length,
+        admin: false,
+        name: "",
+        createdAt: new Date(),
+      },
+    ])
+  }
+  function setUserState(user: User, value: Partial<User>) {
+    setUsers(users.map((u) => (u.id === user.id ? { ...u, ...value } : u)))
+  }
+  async function saveUser(user: User) {
     try {
-      await taskRepo.insert({ title: newTaskTitle })
-      setNewTaskTitle("")
-    } catch (error) {
-      alert((error as { message: string }).message)
+      const saved = await (user.id.startsWith("new")
+        ? userRepo.insert(user)
+        : userRepo.save(user))
+      setUsers(users.map((u) => (u === user ? saved : u)))
+    } catch (err: any) {
+      alert(err.message)
     }
   }
-  const setAllCompleted = async (completed: boolean) => {
-    await TasksController.setAllCompleted(completed)
+  async function deleteUser(user: User) {
+    try {
+      await userRepo.delete(user)
+      setUsers(users.filter((u) => u !== user))
+    } catch (err: any) {
+      alert(err.message)
+    }
   }
-  useEffect(() => {
-    return taskRepo
-      .liveQuery({
-        limit: 20,
-        orderBy: { createdAt: "asc" },
-        //where: { completed: true },
-      })
-      .subscribe((info) => setTasks(info.applyChanges))
-  }, [])
   return (
     <div>
-      <h1>Todos</h1>
-      <main>
-        {taskRepo.metadata.apiInsertAllowed() && (
-          <form onSubmit={addTask}>
-            <input
-              value={newTaskTitle}
-              placeholder="What needs to be done?"
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-            />
-            <button>Add</button>
-          </form>
-        )}
-        {tasks.map((task) => {
-          const setTask = (value: Task) =>
-            setTasks((tasks) => tasks.map((t) => (t === task ? value : t)))
+      <h1>Users</h1>
+      <table>
+        <thead>
+          <th>Name</th>
+          <th>Admin</th>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user.id}>
+              <td>
+                <input
+                  value={user.name}
+                  onChange={(e) => setUserState(user, { name: e.target.value })}
+                />
+              </td>
 
-          const setCompleted = async (completed: boolean) =>
-            await taskRepo.save({ ...task, completed })
-
-          const setTitle = (title: string) => setTask({ ...task, title })
-
-          const saveTask = async () => {
-            try {
-              await taskRepo.save(task)
-            } catch (error) {
-              alert((error as { message: string }).message)
-            }
-          }
-          const deleteTask = async () => {
-            try {
-              await taskRepo.delete(task)
-              setTasks(tasks.filter((t) => t !== task))
-            } catch (error) {
-              alert((error as { message: string }).message)
-            }
-          }
-          return (
-            <div key={task.id}>
-              <input
-                type="checkbox"
-                checked={task.completed}
-                onChange={(e) => setCompleted(e.target.checked)}
-              />
-              <input
-                value={task.title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-              <button onClick={saveTask}>Save</button>
-              {taskRepo.metadata.apiDeleteAllowed(task) && (
-                <button onClick={deleteTask}>Delete</button>
-              )}
-            </div>
-          )
-        })}
-
-        <div>
-          <button onClick={() => setAllCompleted(true)}>
-            Set All Completed
-          </button>
-          <button onClick={() => setAllCompleted(false)}>
-            Set All Uncompleted
-          </button>
-        </div>
-      </main>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={user.admin}
+                  onChange={(e) =>
+                    setUserState(user, { admin: e.target.checked })
+                  }
+                />
+              </td>
+              <td>
+                <button onClick={() => saveUser(user)}>save</button>
+                <button onClick={() => deleteUser(user)}>delete</button>
+              </td>
+            </tr>
+          ))}
+          <tr>
+            <td colSpan={4}>
+              <button onClick={create}>Create</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   )
 }

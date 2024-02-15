@@ -1,15 +1,7 @@
 import { remultExpress } from "remult/remult-express"
-import { Task } from "../shared/Task"
-import { TasksController } from "../shared/TasksController"
-import { createPostgresDataProvider } from "remult/postgres"
+import { User } from "../shared/User"
 
 export const api = remultExpress({
-  entities: [Task],
-  controllers: [TasksController],
+  entities: [User],
   getUser: (req) => req.session!["user"],
-  dataProvider: createPostgresDataProvider({
-    connectionString:
-      process.env["DATABASE_URL"] ||
-      "postgres://postgres:MASTERKEY@localhost/postgres",
-  }),
 })

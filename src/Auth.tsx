@@ -1,66 +1,68 @@
-// src/Auth.tsx
-
 import { FormEvent, useEffect, useState } from "react"
-import { remult } from "remult"
+import { remult, UserInfo } from "remult"
 import App from "./App"
 
 export default function Auth() {
-  const [username, setUsername] = useState("")
-  const [signedIn, setSignedIn] = useState(false)
+  const [currentUser, setCurrentUser] = useState<UserInfo>()
+  const [showSignIn, setShowSignIn] = useState(false)
+  remult.user = currentUser
 
-  const signIn = async (e: FormEvent) => {
-    e.preventDefault()
+  async function signIn(f: FormEvent<HTMLFormElement>) {
+    f.preventDefault()
     const result = await fetch("/api/signIn", {
       method: "POST",
+      body: JSON.stringify(Object.fromEntries(new FormData(f.currentTarget))),
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username }),
     })
     if (result.ok) {
-      remult.user = await result.json()
-      setSignedIn(true)
-      setUsername("")
-    } else {
-      alert(await result.json())
-    }
+      setCurrentUser(await result.json())
+      setShowSignIn(false)
+    } else alert(await result.json())
   }
-
-  const signOut = async () => {
+  async function signOut() {
     await fetch("/api/signOut", {
       method: "POST",
     })
-    remult.user = undefined
-    setSignedIn(false)
+    setCurrentUser(undefined)
+    setShowSignIn(true)
   }
   useEffect(() => {
-    fetch("/api/currentUser").then(async (r) => {
-      remult.user = await r.json()
-      if (remult.user) setSignedIn(true)
-    })
+    fetch("/api/currentUser")
+      .then((r) => r.json())
+      .then(async (currentUserFromServer) => {
+        setCurrentUser(currentUserFromServer)
+      })
   }, [])
 
-  if (!signedIn)
+  if (showSignIn)
     return (
       <>
-        <h1>Todos</h1>
-        <main>
+        <h1>Sign In</h1>
+        <main className="sign-in">
           <form onSubmit={signIn}>
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username, try Steve or Jane"
-            />
+            <label>Name</label>
+            <input name="username" placeholder="Try Steve or Jane" />
             <button>Sign in</button>
           </form>
         </main>
       </>
     )
+
   return (
     <>
       <header>
-        Hello {remult.user!.name} <button onClick={signOut}>Sign Out</button>
+        {!currentUser ? (
+          <button onClick={() => setShowSignIn(true)}>Sign In</button>
+        ) : (
+          <>
+            Hello {currentUser?.name}{" "}
+            <button onClick={signOut}>Sign Out</button>
+          </>
+        )}
       </header>
+
       <App />
     </>
   )
