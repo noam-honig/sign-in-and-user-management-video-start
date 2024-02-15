@@ -48,8 +48,10 @@ export default function App() {
       <h1>Users</h1>
       <table>
         <thead>
-          <th>Name</th>
-          <th>Admin</th>
+          <tr>
+            <th>Name</th>
+            <th>Admin</th>
+          </tr>
         </thead>
         <tbody>
           {users.map((user) => (
