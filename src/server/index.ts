@@ -5,7 +5,6 @@ import { api } from "./api"
 import { auth } from "./auth"
 
 import session from "cookie-session"
-import helmet from "helmet"
 import compression from "compression"
 import path from "path"
 
@@ -15,7 +14,6 @@ app.use(
     secret: process.env["SESSION_SECRET"] || "my secret",
   })
 )
-app.use(helmet())
 app.use(compression())
 app.use(auth)
 
