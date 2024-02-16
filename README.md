@@ -1,6 +1,6 @@
-# React + TypeScript + Vite
+# Sign in and user Management
 
-This is the result of the [Build a Full-Stack React Application](https://remult.dev/tutorials/react/) tutorial
+This code is based on the [Build a Full-Stack React Application](https://remult.dev/tutorials/react/) tutorial
 
 ## Topics
 
