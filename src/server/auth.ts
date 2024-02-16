@@ -1,5 +1,3 @@
-// src/server/auth.ts
-
 import express, { Router } from "express"
 import type { UserInfo } from "remult"
 
@@ -18,7 +16,7 @@ auth.post("/api/signIn", (req, res) => {
     req.session!["user"] = user
     res.json(user)
   } else {
-    res.status(404).json("Invalid user, try 'Steve' or 'Jane'")
+    res.status(404).json("Invalid user info")
   }
 })
 

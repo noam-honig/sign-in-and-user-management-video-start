@@ -43,7 +43,7 @@ export default function Auth() {
         <main className="sign-in">
           <form onSubmit={signIn}>
             <label>Name</label>
-            <input name="username" placeholder="Try Steve or Jane" />
+            <input name="username" />
             <button>Sign in</button>
           </form>
         </main>
